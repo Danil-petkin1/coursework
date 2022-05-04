@@ -1,5 +1,0 @@
-cmake_minimum_required(VERSION 3.22)
-project(coursework)
-add_executable(coursework detected_cone.cpp)
-find_package( OpenCV REQUIRED )
-target_link_libraries( coursework ${OpenCV_LIBS} )
