@@ -8,7 +8,7 @@
 using namespace cv;
 using namespace std;
 
-// global constants ///////////////////////////////////////////////////////////////////////////////
+// global constants //
 const cv::Scalar SCALAR_BLACK = cv::Scalar(0.0, 0.0, 0.0);
 const cv::Scalar SCALAR_WHITE = cv::Scalar(255.0, 255.0, 255.0);
 const cv::Scalar SCALAR_YELLOW = cv::Scalar(0.0, 255.0, 255.0);
@@ -29,11 +29,8 @@ void drawGreenDotAtConeCenter(std::vector<cv::Point> trafficCone, cv::Mat& image
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 int main() {
-	std::cout << "enter the name of the input image without extension: ";
-	string inputName;
-	std::cin >> inputName;
-	string path = inputName + ".png";
-	cv::Mat imgOriginal = cv::imread(path);    // open image
+
+	cv::Mat imgOriginal = cv::imread("C:/Users/79198/Downloads/coursework/build/image3.png");    // open image
 
 
 	if (imgOriginal.empty()) {                                  // if unable to open image
@@ -41,15 +38,14 @@ int main() {
 		return(0);                                              
 	}
 
-	cv::imshow("imgOriginal", imgOriginal);
-
+	//cv::imshow("imgOriginal", imgOriginal);
 	std::vector<std::vector<cv::Point> > trafficCones = findTrafficCones(imgOriginal);
 
 	cv::Mat imgOriginalWithCones = imgOriginal.clone();
-
+	cv::Mat imgIOU = imgOriginal.clone();
 	// draw convex hull around outside of cones
-	cv::drawContours(imgOriginalWithCones, trafficCones, -1, SCALAR_YELLOW, 2);
 
+	cv::drawContours(imgOriginalWithCones, trafficCones, -1, SCALAR_YELLOW, 2);
 	for (auto& trafficCone : trafficCones) {        // for each found traffic cone
 		drawGreenDotAtConeCenter(trafficCone, imgOriginalWithCones);      // draw small green dot at center of mass of cone        
 	}
@@ -96,7 +92,7 @@ std::vector<std::vector<cv::Point> > findTrafficCones(cv::Mat imgOriginal) {
 	std::vector<std::vector<cv::Point> > And;
 	// convert to HSV color space
 	cv::cvtColor(imgOriginal, imgHSV, CV_BGR2HSV);
-	cv::imshow("imgHSV", imgHSV);
+	//cv::imshow("imgHSV", imgHSV);
 
 	// threshold on low range of HSV red
 	cv::inRange(imgHSV, cv::Scalar(0, 135, 135), cv::Scalar(15, 255, 255), imgThreshLow);
@@ -107,7 +103,7 @@ std::vector<std::vector<cv::Point> > findTrafficCones(cv::Mat imgOriginal) {
 
 	// combine (i.e. add) low and high thresh images
 	cv::add(imgThreshLow, imgThreshHigh, imgThresh);
-	cv::imshow("imgThresh", imgThresh);
+	//cv::imshow("imgThresh", imgThresh);
 
 	// open image (erode, then dilate)
 	imgThreshSmoothed = imgThresh.clone();
@@ -121,13 +117,13 @@ std::vector<std::vector<cv::Point> > findTrafficCones(cv::Mat imgOriginal) {
 
 	// find Canny edges
 	cv::Canny(imgThreshSmoothed, imgCanny, 80, 160);
-	cv::imshow("imgCanny", imgCanny);
+	//cv::imshow("imgCanny", imgCanny);
 
 	// find and draw contours
 	cv::findContours(imgCanny.clone(), contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
 	imgContours = cv::Mat(imgOriginal.size(), CV_8UC3, SCALAR_BLACK);
 	cv::drawContours(imgContours, contours, -1, SCALAR_WHITE);
-	cv::imshow("imgContours", imgContours);
+	//cv::imshow("imgContours", imgContours);
 
 	// find convex hulls
 	std::vector<std::vector<cv::Point> > allConvexHulls(contours.size());
@@ -136,7 +132,7 @@ std::vector<std::vector<cv::Point> > findTrafficCones(cv::Mat imgOriginal) {
 	}
 	imgAllConvexHulls = cv::Mat(imgOriginal.size(), CV_8UC3, SCALAR_BLACK);
 	cv::drawContours(imgAllConvexHulls, allConvexHulls, -1, SCALAR_WHITE);
-	cv::imshow("imgAllConvexHulls", imgAllConvexHulls);
+	//cv::imshow("imgAllConvexHulls", imgAllConvexHulls);
 	
 	// loop through convex hulls, check if each is a traffic cone, add to vector of traffic cones if it is
 	for (auto& convexHull : allConvexHulls) {
@@ -151,25 +147,27 @@ std::vector<std::vector<cv::Point> > findTrafficCones(cv::Mat imgOriginal) {
 
 	imgTrafficCones = cv::Mat(imgOriginal.size(), CV_8UC3, SCALAR_BLACK);
 	cv::drawContours(imgTrafficCones, trafficCones, -1, SCALAR_WHITE, CV_FILLED);
-	cv::imshow("imgTrafficCones", imgTrafficCones);
+	//cv::imshow("imgTrafficCones", imgTrafficCones);
 
 
 	//finding IOU (Intersection over Union)
-	std::vector <cv::Point> conepoint = { Point(255,435),Point(266, 435),Point(276, 504),Point(292, 511), Point(218, 513), Point(236, 503) };
-	//std::vector <cv::Point> conepoint = { Point(180,257),Point(194, 170),Point(231, 252)};
-	//std::vector <cv::Point> conepoint = { Point(615,977),Point(449, 442),Point(386, 445) , Point(254, 973) };
+	//std::vector <cv::Point> conepoint = { Point(255,435),Point(266, 435),Point(276, 504),Point(292, 511), Point(218, 513), Point(236, 503) }; //image3
+	//std::vector <cv::Point> conepoint = { Point(180,257),Point(194, 170),Point(231, 252)}; //image4
+	//std::vector <cv::Point> conepoint = { Point(615,977),Point(449, 442),Point(386, 445) , Point(254, 973) }; //image1
 
-	contourstr.push_back(conepoint);
-
-	imgIdeal = cv::Mat(imgOriginal.size(), CV_8UC3, SCALAR_BLACK);
-	cv::drawContours(imgIdeal, contourstr, 0, SCALAR_WHITE, CV_FILLED);
-	imshow("ideal", imgIdeal);
-	Res = cv::Mat(imgOriginal.size(), CV_8UC3, SCALAR_BLACK);
-	//adding images
-	imgIdeal = imgIdeal & imgTrafficCones;
-	cv::Canny(imgIdeal, Res, 50, 160);
-	cv::findContours(Res, And, CV_RETR_LIST, CV_CHAIN_APPROX_NONE);
-	std::cout << "IOA: " << contourArea(And[0])/( contourArea(trafficCones[1]) + contourArea(contourstr[0]) - contourArea(And[0])) << std::endl;
+	//contourstr.push_back(conespoint);
+	//cv::Mat imgOrig = imgOriginal.clone();
+	//imgIdeal = cv::Mat(imgOriginal.size(), CV_8UC3, SCALAR_BLACK);
+	//cv::drawContours(imgOrig, contourstr, 0, SCALAR_YELLOW, 2);
+	//cv::drawContours(imgIdeal, contourstr, 0, SCALAR_WHITE, CV_FILLED);
+	//imshow("ideal", imgOrig);
+	//Res = cv::Mat(imgOriginal.size(), CV_8UC3, SCALAR_BLACK);
+	////adding images
+	//imgIdeal = imgIdeal & imgTrafficCones;
+	//cv::Canny(imgIdeal, Res, 50, 160);
+	//cv::findContours(Res, And, CV_RETR_LIST, CV_CHAIN_APPROX_NONE);
+	//std::cout << "IOA: " << contourArea(And[0])/( contourArea(trafficCones[0]) + contourArea(contourstr[0]) - contourArea(And[0])) << std::endl;
+	
 	return trafficCones;
 }
 
@@ -219,7 +217,7 @@ bool isTrafficCone(std::vector<cv::Point> convexHull) {
 	return true;
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////
 void drawGreenDotAtConeCenter(std::vector<cv::Point> trafficCone, cv::Mat& image) {
 
 	// find the contour moments
