@@ -28,41 +28,51 @@ bool isTrafficCone(std::vector<cv::Point> convexHull);
 void drawGreenDotAtConeCenter(std::vector<cv::Point> trafficCone, cv::Mat& image);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-int main() {
-
-	cv::Mat imgOriginal = cv::imread("C:/Users/79198/Downloads/coursework/build/image3.png");    // open image
-
-
-	if (imgOriginal.empty()) {                                  // if unable to open image
-		std::cout << "error: image not read from file\n\n";     // show error message on command line                                            
-		return(0);                                              
+int main(int argc, char* argv[]) {
+	string file = argv[0];
+	file.resize(file.size() - 20);
+	for (std::string::size_type n = 0; (n = file.find("\\", n)) != std::string::npos; ++n)
+	{
+		file.replace(n, 1, 1, '/');
 	}
 
-	//cv::imshow("imgOriginal", imgOriginal);
-	std::vector<std::vector<cv::Point> > trafficCones = findTrafficCones(imgOriginal);
+	for (size_t i = 2; i < 5; i++)
+	{
+		string re = file + "image" + to_string(i) + ".png";
+		cv::Mat imgOriginal = cv::imread(re);    // open image
+		if (imgOriginal.empty()) {                                  // if unable to open image
+			std::cout << "error: image not read from file\n\n";     // show error message on command line                                            
+			return(0);
+		}
 
-	cv::Mat imgOriginalWithCones = imgOriginal.clone();
-	cv::Mat imgIOU = imgOriginal.clone();
-	// draw convex hull around outside of cones
+		//cv::imshow("imgOriginal", imgOriginal);
+		std::vector<std::vector<cv::Point> > trafficCones = findTrafficCones(imgOriginal);
 
-	cv::drawContours(imgOriginalWithCones, trafficCones, -1, SCALAR_YELLOW, 2);
-	for (auto& trafficCone : trafficCones) {        // for each found traffic cone
-		drawGreenDotAtConeCenter(trafficCone, imgOriginalWithCones);      // draw small green dot at center of mass of cone        
+		cv::Mat imgOriginalWithCones = imgOriginal.clone();
+		cv::Mat imgIOU = imgOriginal.clone();
+		// draw convex hull around outside of cones
+
+		cv::drawContours(imgOriginalWithCones, trafficCones, -1, SCALAR_YELLOW, 2);
+		for (auto& trafficCone : trafficCones) {        // for each found traffic cone
+			drawGreenDotAtConeCenter(trafficCone, imgOriginalWithCones);      // draw small green dot at center of mass of cone        
+		}
+
+		cv::imshow("imgOriginalWithCones", imgOriginalWithCones);
+
+		if (trafficCones.size() <= 0) {
+			std::cout << "\n" << "image"+ to_string(i) + ": no traffic cones were found" << "\n\n";
+		}
+		else if (trafficCones.size() == 1) {
+			std::cout << "\n" << "image" + to_string(i) + ": 1 traffic cone was found" << "\n\n";
+		}
+		else if (trafficCones.size() > 1) { 
+			std::cout << "image" + to_string(i) + ": " << trafficCones.size()<< " traffic cones were found" << "\n\n";
+		}
+		cv::waitKey(0);
 	}
 
-	cv::imshow("imgOriginalWithCones", imgOriginalWithCones);
 
-	if (trafficCones.size() <= 0) {
-		std::cout << "\n" << "no traffic cones were found" << "\n\n";
-	}
-	else if (trafficCones.size() == 1) {
-		std::cout << "\n" << "1 traffic cone was found" << "\n\n";
-	}
-	else if (trafficCones.size() > 1) {
-		std::cout <<  trafficCones.size() << " traffic cones were found" << "\n\n";
-	}
-
-	cv::waitKey(0);               
+            
 
 	return(0);
 }
